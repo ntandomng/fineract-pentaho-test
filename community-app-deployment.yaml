@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: fineract-frontend
+  name: fineract-frontend
+  namespace: pentaho-test  
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fineract-frontend
+  template:
+    metadata:
+      labels:
+        app: fineract-frontend
+    spec:
+      containers:
+        - image: openmf/community-app:latest
+          name: mifos-ui
+          ports:
+            - containerPort: 80
+      restartPolicy: Always

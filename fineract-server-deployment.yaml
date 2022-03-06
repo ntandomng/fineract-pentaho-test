@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: pentaho-test  
+  name: fineract-server
+  labels:
+    app: fineract-server
+spec:
+  selector:
+    matchLabels:
+      app: fineract-server
+      tier: backend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: fineract-server
+        tier: backend
+    spec:
+      initContainers:
+        - name: init-mydb
+          image: busybox:1.28
+          command: ['sh', '-c', 'echo -e "Checking for the availability of MYSQL server deployment"; while ! nc -z "fineractmysql" 3306; do sleep 1; printf "-"; done; echo -e " >> MYSQL server has started";']
+      containers:
+      - name: fineract-server
+        image: apache/fineract:latest
+        resources:
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+          requests:
+            cpu: "200m"
+            memory: "0.5Gi"
+        livenessProbe:
+          httpGet:
+            path: /fineract-provider/actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 180
+          periodSeconds: 1
+        readinessProbe:
+          httpGet:
+            path: /fineract-provider/actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 180
+          periodSeconds: 1
+        env:
+        - name: DRIVERCLASS_NAME
+          value: org.drizzle.jdbc.DrizzleDriver
+        - name: PROTOCOL
+          value: jdbc
+        - name: SUB_PROTOCOL
+          value: 'mysql:thin'
+        - name: node_id
+          value: '1'
+        - name: fineract_tenants_driver
+          value: org.drizzle.jdbc.DrizzleDriver
+        - name: fineract_tenants_url
+          value: 'jdbc:mysql:thin://fineractmysql:3306/fineract_tenants'
+        - name: fineract_tenants_uid
+          value: root
+        - name: fineract_tenants_pwd
+          value: 'skdcnwauicn2ucnaecasdsajdnizucawencascdca'
+        - name: FINERACT_DEFAULT_TENANTDB_HOSTNAME
+          value: fineractmysql
+        - name: FINERACT_DEFAULT_TENANTDB_PORT
+          value: '3306'
+        - name: FINERACT_DEFAULT_TENANTDB_UID
+          value: root
+        - name: FINERACT_DEFAULT_TENANTDB_PWD
+          value: skdcnwauicn2ucnaecasdsajdnizucawencascdca
+        - name: FINERACT_DEFAULT_TENANTDB_CONN_PARAMS
+          value: ''
+        ports:
+        - containerPort: 8443
+          name: fineract-server

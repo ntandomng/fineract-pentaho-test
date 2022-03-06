@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: pentaho-test  
+  name: fineractmysql-initdb-pentaho
+  labels:
+    app: fineract-server
+data:
+  init.sql: |
+    # create databases
+    CREATE DATABASE IF NOT EXISTS `fineract_tenants`;
+    CREATE DATABASE IF NOT EXISTS `fineract_default`;
+
+    # create root user and grant rights
+    GRANT ALL ON *.* TO 'root'@'%';
